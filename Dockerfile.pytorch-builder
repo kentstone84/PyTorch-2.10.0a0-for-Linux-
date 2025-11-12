@@ -1,0 +1,79 @@
+# ========================================================================
+# PyTorch Builder for sm_120 (Blackwell) + CUDA 13.0
+# Builds PyTorch from source with RTX 5080 support
+# ========================================================================
+FROM nvidia/cuda:13.0.1-devel-ubuntu24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# -------------------------------------------------------------------------
+# Install Build Dependencies
+# -------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-dev python3-venv \
+    git cmake ninja-build ccache \
+    libopenblas-dev libomp-dev \
+    build-essential ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# -------------------------------------------------------------------------
+# Setup Python Environment
+# -------------------------------------------------------------------------
+RUN python3 -m venv /opt/pytorch-build
+ENV PATH="/opt/pytorch-build/bin:${PATH}"
+
+# Install Python build dependencies
+RUN pip install --no-cache-dir \
+    numpy \
+    pyyaml \
+    setuptools \
+    cmake \
+    typing-extensions \
+    wheel \
+    six \
+    'packaging>=21.0'
+
+# -------------------------------------------------------------------------
+# Clone PyTorch Repository
+# -------------------------------------------------------------------------
+# Using v2.10.0 tag or main branch
+RUN git clone --recursive --branch main --depth 1 https://github.com/pytorch/pytorch.git /build/pytorch
+
+WORKDIR /build/pytorch
+
+# -------------------------------------------------------------------------
+# Configure Build for CUDA 13.0 + sm_120 (Blackwell)
+# -------------------------------------------------------------------------
+ENV TORCH_CUDA_ARCH_LIST="12.0"
+ENV TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
+ENV CMAKE_PREFIX_PATH="/opt/pytorch-build"
+ENV USE_CUDA=1
+ENV USE_CUDNN=1
+ENV USE_MKLDNN=0
+ENV BUILD_TEST=0
+ENV USE_FBGEMM=0
+ENV USE_KINETO=0
+ENV USE_DISTRIBUTED=0
+ENV MAX_JOBS=8
+
+# -------------------------------------------------------------------------
+# Build PyTorch
+# -------------------------------------------------------------------------
+# This will take 1-3 hours depending on hardware
+RUN python setup.py bdist_wheel
+
+# -------------------------------------------------------------------------
+# Output wheel location
+# -------------------------------------------------------------------------
+RUN echo "==================================================================" && \
+    echo "PyTorch build complete!" && \
+    echo "Wheel location:" && \
+    ls -lh /build/pytorch/dist/*.whl && \
+    echo "=================================================================="
+
+# Keep container running so we can extract the wheel
+CMD ["bash", "-c", "echo 'PyTorch wheel ready at:' && ls -lh /build/pytorch/dist/*.whl && tail -f /dev/null"]

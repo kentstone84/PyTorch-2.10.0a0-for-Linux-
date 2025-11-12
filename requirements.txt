@@ -1,0 +1,13 @@
+# PyTorch 2.10.0a0 SM120 (RTX 50-series) Dependencies
+# Install these before installing the PyTorch wheel
+
+# Core dependencies
+numpy>=2.3.0
+packaging>=25.0
+PyYAML>=6.0
+typing-extensions>=4.15.0
+
+# Build tools (optional, only needed if building from source)
+cmake>=4.1.0
+setuptools>=80.0
+wheel>=0.45.0
