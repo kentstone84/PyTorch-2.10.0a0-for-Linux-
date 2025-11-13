@@ -53,23 +53,23 @@ ENV TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas
 # Enable SM 12.0
 ENV TORCH_CUDA_ARCH_LIST="12.0"
 ENV CUDACXX=/usr/local/cuda/bin/nvcc
+# Use all cores for build (adjust based on your CPU)
+ENV MAX_JOBS=24
 
 # -------------------------------------------------------------------------
 # Build Triton
 # -------------------------------------------------------------------------
-# This will take 30-60 minutes depending on hardware
-RUN pip install -e .
-
-# Alternatively, build wheel:
-# RUN python setup.py bdist_wheel
+# This will take 20-30 minutes with 24 cores
+RUN python setup.py bdist_wheel
 
 # -------------------------------------------------------------------------
 # Output wheel location
 # -------------------------------------------------------------------------
 RUN echo "==================================================================" && \
     echo "Triton build complete!" && \
-    echo "Installation location: /opt/triton-build/lib/python*/site-packages/triton" && \
-    python -c "import triton; print(f'Triton version: {triton.__version__}')" && \
+    echo "Wheel location:" && \
+    ls -lh /build/triton/python/dist/*.whl && \
+    cp /build/triton/python/dist/triton-*.whl /build/triton_sm120.whl && \
     echo "=================================================================="
 
 # Keep container running so we can test
