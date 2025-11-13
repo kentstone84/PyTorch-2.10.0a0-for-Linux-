@@ -32,8 +32,8 @@ echo "Cloning Triton (this may take a few minutes)..."
 git clone --depth 1 https://github.com/triton-lang/triton.git
 
 # Verify clone succeeded
-if [ ! -d "triton/python" ]; then
-    echo "ERROR: Clone failed or incomplete. triton/python not found."
+if [ ! -d "triton" ]; then
+    echo "ERROR: Clone failed. triton directory not found."
     exit 1
 fi
 
@@ -43,15 +43,22 @@ cd triton
 COMMIT_HASH=$(git rev-parse --short HEAD)
 echo "✓ Clone complete! Commit: $COMMIT_HASH"
 
-# Verify setup.py exists
-if [ ! -f "python/setup.py" ]; then
-    echo "ERROR: python/setup.py not found!"
-    echo "Directory contents:"
-    ls -la python/
+# Check repository structure (Triton changed structure recently)
+if [ -f "setup.py" ]; then
+    echo "✓ Found setup.py at root (new Triton structure)"
+    SETUP_DIR="."
+elif [ -f "python/setup.py" ]; then
+    echo "✓ Found setup.py in python/ (old Triton structure)"
+    SETUP_DIR="python"
+else
+    echo "ERROR: setup.py not found!"
+    echo "Repository root contents:"
+    ls -la
+    echo ""
+    echo "Checking python/ directory:"
+    ls -la python/ 2>/dev/null || echo "python/ directory does not exist"
     exit 1
 fi
-
-echo "✓ python/setup.py found"
 
 echo ""
 echo "======================================================================="
@@ -107,8 +114,10 @@ echo "======================================================================="
 echo "Your 14900KS is about to GO BRRRR! 🔥"
 echo ""
 
-# Use pip install method (more reliable)
-cd python
+# Navigate to setup.py location
+cd "$SETUP_DIR"
+
+echo "Working directory: $(pwd)"
 
 # Clean any previous builds
 rm -rf build dist *.egg-info
