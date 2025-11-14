@@ -86,6 +86,9 @@ All dependencies are listed in `requirements.txt` and will be installed automati
 
 ## Installation
 
+pip install https://github.com/kentstone84/pytorch-rtx5080-support/releases/download/v0.1/torch-2.10.0a0-cp310-cp310-linux_x86_64.whl
+
+
 ### Quick Install (Linux)
 
 ```bash
