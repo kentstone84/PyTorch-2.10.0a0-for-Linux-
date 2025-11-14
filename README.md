@@ -6,7 +6,7 @@
 
 Native Blackwell architecture support for NVIDIA GeForce RTX 5090, 5080, 5070 Ti, and 5070 GPUs.
 
-📖 **[Quick Start Guide](RTX5080_README.md)** | 🔧 **[Triton Build Guide](TRITON_BUILD_GUIDE.md)** | 📋 **[Complete Feature List](FEATURES.md)**
+📖 **[Quick Start Guide](RTX5080_README.md)** | 🔧 **[Triton Build Guide](TRITON_BUILD_GUIDE.md)** | 📋 **[Complete Feature List](FEATURES.md)** | 🐍 **[Python Versions](PYTHON_VERSIONS.md)** | 🐳 **[Docker Install](DOCKER_INSTALL.md)**
 
 ## Overview
 
@@ -25,7 +25,7 @@ This build solves that problem by compiling PyTorch from source with `TORCH_CUDA
 
 - **PyTorch Version:** 2.10.0a0+gitc5d91d9
 - **CUDA Version:** 13.0.1 (compatible with all CUDA 12.x and 13.x)
-- **Python Version:** 3.12
+- **Python Versions:** 3.12 (stable), 3.13 (available), 3.14 (coming soon) - [See guide](PYTHON_VERSIONS.md)
 - **Platform:** Linux x86_64
 - **Architecture:** SM 12.0 (compute_120, code_sm_120)
 - **Build Date:** November 12, 2025
