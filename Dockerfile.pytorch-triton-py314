@@ -1,0 +1,139 @@
+# ========================================================================
+# PyTorch + Triton Builder for SM 12.0 (Blackwell) + CUDA 13.0 + Python 3.14
+# Builds both PyTorch and Triton from source with RTX 50-series support
+# ========================================================================
+FROM nvidia/cuda:13.0.1-devel-ubuntu24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# -------------------------------------------------------------------------
+# Install Python 3.14 (when available) and Build Dependencies
+# -------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    python3.14 python3.14-dev python3.14-venv \
+    git cmake ninja-build ccache \
+    libopenblas-dev libomp-dev \
+    build-essential ca-certificates \
+    llvm-18 llvm-18-dev \
+    libz3-dev zlib1g-dev \
+    wget curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# -------------------------------------------------------------------------
+# Setup Python 3.14 Environment
+# -------------------------------------------------------------------------
+RUN python3.14 -m venv /opt/pytorch-build
+ENV PATH="/opt/pytorch-build/bin:${PATH}"
+
+# Verify Python version
+RUN python --version && python -c "import sys; assert sys.version_info[:2] == (3, 14), f'Wrong Python version: {sys.version_info}'"
+
+# Install Python build dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+    numpy \
+    pyyaml \
+    setuptools \
+    cmake \
+    typing-extensions \
+    wheel \
+    six \
+    'packaging>=21.0' \
+    pybind11 \
+    lit
+
+# =========================================================================
+# PART 1: Build Triton First
+# =========================================================================
+
+WORKDIR /build/triton
+
+# Clone Triton repository (main branch has Blackwell support)
+RUN git clone --branch main --depth 1 https://github.com/triton-lang/triton.git /build/triton
+
+# Configure Triton Build
+ENV TRITON_BUILD_WITH_CCACHE=1
+ENV TRITON_BUILD_WITH_O1=1
+ENV TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas
+ENV TORCH_CUDA_ARCH_LIST="12.0"
+ENV CUDACXX=/usr/local/cuda/bin/nvcc
+ENV MAX_JOBS=24
+
+# Detect repository structure and build Triton wheel
+RUN echo "Building Triton for Python 3.14..." && \
+    if [ -f "setup.py" ]; then \
+        echo "Found setup.py at root (new Triton structure)"; \
+        SETUP_DIR="."; \
+    elif [ -f "python/setup.py" ]; then \
+        echo "Found setup.py in python/ (old Triton structure)"; \
+        SETUP_DIR="python"; \
+    else \
+        echo "ERROR: setup.py not found!"; \
+        exit 1; \
+    fi && \
+    cd "$SETUP_DIR" && \
+    python setup.py bdist_wheel && \
+    WHEEL_FILE=$(ls dist/triton-*cp314*.whl | head -1) && \
+    cp "$WHEEL_FILE" /build/triton_sm120_cp314.whl && \
+    echo "Triton wheel created: $(ls -lh /build/triton_sm120_cp314.whl)"
+
+# Install Triton into environment
+RUN pip install /build/triton_sm120_cp314.whl
+
+# =========================================================================
+# PART 2: Build PyTorch with Triton Support
+# =========================================================================
+
+WORKDIR /build/pytorch
+
+# Clone PyTorch Repository
+RUN git clone --recursive --branch main --depth 1 https://github.com/pytorch/pytorch.git /build/pytorch
+
+# Configure Build for CUDA 13.0 + sm_120 (Blackwell)
+ENV TORCH_CUDA_ARCH_LIST="12.0"
+ENV TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
+ENV CMAKE_PREFIX_PATH="/opt/pytorch-build"
+ENV USE_CUDA=1
+ENV USE_CUDNN=1
+ENV USE_MKLDNN=0
+ENV BUILD_TEST=0
+ENV USE_FBGEMM=0
+ENV USE_KINETO=0
+ENV USE_DISTRIBUTED=1
+ENV MAX_JOBS=24
+
+# Important: Enable Triton integration
+ENV USE_TRITON=1
+
+# Build PyTorch
+RUN echo "Building PyTorch for Python 3.14..." && \
+    python setup.py bdist_wheel && \
+    WHEEL_FILE=$(ls dist/torch-*cp314*.whl | head -1) && \
+    cp "$WHEEL_FILE" /build/torch_sm120_cp314.whl && \
+    echo "PyTorch wheel created: $(ls -lh /build/torch_sm120_cp314.whl)"
+
+# =========================================================================
+# Final Output
+# =========================================================================
+
+RUN echo "==================================================================" && \
+    echo "Build complete for Python 3.14!" && \
+    echo "" && \
+    echo "Python version: $(python --version)" && \
+    echo "Triton wheel: $(ls -lh /build/triton_sm120_cp314.whl)" && \
+    echo "PyTorch wheel: $(ls -lh /build/torch_sm120_cp314.whl)" && \
+    echo "==================================================================" && \
+    echo "" && \
+    echo "Verifying installations..." && \
+    python -c "import torch; import triton; print(f'PyTorch: {torch.__version__}'); print(f'Triton: {triton.__version__}')" && \
+    echo "=================================================================="
+
+# Keep container running so we can extract wheels
+CMD ["bash", "-c", "echo 'Wheels ready at:' && ls -lh /build/*cp314*.whl && tail -f /dev/null"]
