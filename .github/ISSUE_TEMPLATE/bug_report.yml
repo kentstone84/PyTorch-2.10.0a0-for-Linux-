@@ -1,0 +1,119 @@
+name: Bug Report
+description: Report a bug or issue with stone-linux or PyTorch RTX 50-series support
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this bug! Please fill out the form below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Install stone-linux with '...'
+        2. Run command '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: system-info
+    attributes:
+      label: System Information
+      description: Please paste the output of `stone-verify --system-info`
+      render: shell
+      placeholder: |
+        stone-linux version: X.X.X
+        Python version: 3.12
+        GPU: NVIDIA GeForce RTX 5080
+        CUDA Version: 13.0
+        Driver Version: 570.00
+    validations:
+      required: true
+
+  - type: dropdown
+    id: gpu-model
+    attributes:
+      label: GPU Model
+      description: Which RTX 50-series GPU are you using?
+      options:
+        - RTX 5090
+        - RTX 5080
+        - RTX 5070 Ti
+        - RTX 5070
+        - Other (please specify in description)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: python-version
+    attributes:
+      label: Python Version
+      description: Which Python version are you using?
+      options:
+        - "3.10"
+        - "3.11"
+        - "3.12"
+        - "3.13"
+        - "3.14"
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: Please paste any relevant error messages or logs
+      render: shell
+      placeholder: Paste error logs here
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here
+      placeholder: Any additional information that might help
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to avoid duplicates
+          required: true
+        - label: I have included system information from `stone-verify --system-info`
+          required: true
+        - label: I have verified my NVIDIA driver is >= 570.00
+          required: false

@@ -1,0 +1,19 @@
+# Include package metadata
+include LICENSE
+include README.md
+include requirements.txt
+include FEATURES.md
+include PYTHON_VERSIONS.md
+include RTX5080_README.md
+
+# Include examples and notebooks
+recursive-include stone_linux/examples *.py
+recursive-include notebooks *.ipynb
+
+# Include documentation
+recursive-include docs *.md
+
+# Exclude build artifacts
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store

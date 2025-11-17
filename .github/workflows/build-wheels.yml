@@ -1,0 +1,122 @@
+name: Build PyTorch Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_versions:
+        description: 'Python versions to build (comma-separated, e.g., 3.12,3.13)'
+        required: true
+        default: '3.12,3.13,3.14'
+      build_triton:
+        description: 'Build Triton as well'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-wheels:
+    name: Build PyTorch Wheel (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(format('[{0}]', github.event.inputs.python_versions)) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build PyTorch Wheel (Python ${{ matrix.python-version }})
+        run: |
+          PYTHON_VERSION=${{ matrix.python-version }}
+
+          # Determine the correct Dockerfile based on Python version
+          if [ "$PYTHON_VERSION" = "3.13" ]; then
+            DOCKERFILE="Dockerfile.pytorch-triton-py313"
+          elif [ "$PYTHON_VERSION" = "3.14" ]; then
+            DOCKERFILE="Dockerfile.pytorch-triton-py314"
+          else
+            DOCKERFILE="Dockerfile.pytorch-builder"
+          fi
+
+          echo "Building with $DOCKERFILE for Python $PYTHON_VERSION"
+
+          docker build -f $DOCKERFILE -t pytorch-builder:py${PYTHON_VERSION} .
+
+          # Extract wheel from container
+          CONTAINER_ID=$(docker create pytorch-builder:py${PYTHON_VERSION})
+          docker cp $CONTAINER_ID:/workspace/dist/. ./dist/
+          docker rm $CONTAINER_ID
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytorch-wheel-py${{ matrix.python-version }}
+          path: dist/*.whl
+
+  build-triton:
+    name: Build Triton (Python ${{ matrix.python-version }})
+    if: github.event.inputs.build_triton == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ${{ fromJson(format('[{0}]', github.event.inputs.python_versions)) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Triton
+        run: |
+          chmod +x build-triton-py${{ matrix.python-version }}.sh
+          ./build-triton-py${{ matrix.python-version }}.sh
+
+      - name: Upload Triton artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: triton-wheel-py${{ matrix.python-version }}
+          path: dist/triton*.whl
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-wheels]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./wheels
+
+      - name: Display structure of downloaded files
+        run: ls -R ./wheels
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v2.10.0a0-${{ github.run_number }}
+          name: PyTorch 2.10.0a0 Build ${{ github.run_number }}
+          body: |
+            # PyTorch 2.10.0a0 with SM 12.0 Support
+
+            Pre-built wheels for Python ${{ github.event.inputs.python_versions }}
+
+            ## Installation
+
+            ```bash
+            pip install stone-linux
+            stone-install
+            ```
+
+            Or download the wheel directly for your Python version.
+          files: ./wheels/**/*.whl
+          draft: false
+          prerelease: true
