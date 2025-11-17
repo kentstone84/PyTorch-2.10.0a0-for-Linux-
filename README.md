@@ -86,48 +86,92 @@ All dependencies are listed in `requirements.txt` and will be installed automati
 
 ## Installation
 
-pip install https://github.com/kentstone84/pytorch-rtx5080-support/releases/download/v0.1/torch-2.10.0a0-cp310-cp310-linux_x86_64.whl
+### Recommended: Install via PyPI
 
-
-### Quick Install (Linux)
+The easiest way to install PyTorch with RTX 50-series support:
 
 ```bash
-# Clone or download this repository
-cd pytorch-sm120-release
+# Install the stone-linux package
+pip install stone-linux
+
+# Run the installer (downloads and installs the appropriate PyTorch wheel)
+stone-install
+
+# Verify installation
+stone-verify
+```
+
+The installer will automatically:
+- Detect your Python version
+- Download the correct PyTorch wheel from GitHub releases
+- Install all dependencies
+- Verify GPU compatibility
+
+### Alternative: Direct Wheel Installation
+
+Download and install the wheel directly for your Python version:
+
+```bash
+# Python 3.10
+pip install https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/releases/download/v2.10.0a0/torch-2.10.0a0-cp310-cp310-linux_x86_64.whl
+
+# Python 3.11
+pip install https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/releases/download/v2.10.0a0/torch-2.10.0a0-cp311-cp311-linux_x86_64.whl
+
+# Python 3.12
+pip install https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/releases/download/v2.10.0a0/torch-2.10.0a0-cp312-cp312-linux_x86_64.whl
+
+# Python 3.13
+pip install https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/releases/download/v2.10.0a0/torch-2.10.0a0-cp313-cp313-linux_x86_64.whl
+
+# Python 3.14
+pip install https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/releases/download/v2.10.0a0/torch-2.10.0a0-cp314-cp314-linux_x86_64.whl
+```
+
+### Alternative: Clone and Install Script
+
+```bash
+# Clone this repository
+git clone https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-.git
+cd PyTorch-2.10.0a0-for-Linux-
 
 # Run the installation script
 chmod +x install.sh
 ./install.sh
 ```
 
-### Manual Installation
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Install PyTorch wheel
-pip install torch_sm120.whl --force-reinstall
-```
-
 ### Windows (WSL2 Required)
 
-This is a Linux wheel. To use on Windows, you need WSL2 with Ubuntu:
+This is a Linux wheel. Windows users need WSL2 with Ubuntu:
 
-```batch
-# Run in WSL2 Ubuntu terminal
-cd pytorch-sm120-release
-chmod +x install.sh
-./install.sh
+```bash
+# In WSL2 Ubuntu terminal
+pip install stone-linux
+stone-install
 ```
 
 ## Verification
 
-After installation, verify PyTorch is working correctly:
+### Quick Verification
+
+If you installed via `stone-linux`:
+
+```bash
+stone-verify
+```
+
+### Python Verification
+
+Verify PyTorch is working correctly:
 
 ```python
 import torch
+import stone_linux
 
+# Quick verification
+stone_linux.verify_installation()
+
+# Or manually check
 print(f"PyTorch Version: {torch.__version__}")
 print(f"CUDA Available: {torch.cuda.is_available()}")
 print(f"CUDA Version: {torch.version.cuda}")
@@ -155,6 +199,37 @@ Compared to PyTorch nightlies on RTX 50-series:
 - **20-30% faster** training and inference
 - **No JIT overhead** from PTX compilation
 - **Native Blackwell optimizations**
+- **Full Tensor Core utilization**
+
+See the [performance benchmarks notebook](notebooks/02_performance_benchmarks.ipynb) for detailed metrics.
+
+## Examples and Tutorials
+
+### Jupyter Notebooks
+
+- **[Getting Started](notebooks/01_getting_started.ipynb)** - Basic PyTorch operations, neural networks, and mixed precision training
+- **[Performance Benchmarks](notebooks/02_performance_benchmarks.ipynb)** - Comprehensive performance analysis and optimization tips
+
+### Integration Examples
+
+- **[vLLM Integration](stone_linux/examples/vllm_example.py)** - High-performance LLM inference with vLLM
+- **[LangChain Integration](stone_linux/examples/langchain_example.py)** - LLM applications with LangChain
+- **[Benchmarking Script](stone_linux/examples/benchmark.py)** - Performance benchmarking utilities
+
+Run examples:
+```bash
+# Install with examples
+pip install 'stone-linux[examples,vllm,langchain]'
+
+# Run vLLM example
+python -m stone_linux.examples.vllm_example
+
+# Run LangChain example
+python -m stone_linux.examples.langchain_example
+
+# Run benchmarks
+python -m stone_linux.examples.benchmark --output results.json
+```
 
 ## Troubleshooting
 

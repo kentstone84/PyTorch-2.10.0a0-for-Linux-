@@ -1,0 +1,107 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stone-linux"
+version = "2.10.0a0"
+description = "PyTorch 2.10 with native SM 12.0 (Blackwell) support for NVIDIA RTX 50-series GPUs"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "BSD-3-Clause"}
+authors = [
+    {name = "PyTorch RTX Community", email = "kentstone84@users.noreply.github.com"}
+]
+maintainers = [
+    {name = "PyTorch RTX Community", email = "kentstone84@users.noreply.github.com"}
+]
+keywords = [
+    "pytorch",
+    "machine-learning",
+    "deep-learning",
+    "gpu",
+    "cuda",
+    "rtx-5090",
+    "rtx-5080",
+    "rtx-5070",
+    "blackwell",
+    "sm120",
+    "nvidia"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "numpy>=2.0.0",
+    "packaging>=24.0",
+    "PyYAML>=6.0",
+    "typing-extensions>=4.8.0",
+    "requests>=2.31.0",
+    "tqdm>=4.66.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+]
+examples = [
+    "jupyter>=1.0.0",
+    "notebook>=7.0.0",
+    "matplotlib>=3.8.0",
+    "pandas>=2.1.0",
+]
+vllm = [
+    "vllm>=0.6.0",
+]
+langchain = [
+    "langchain>=0.1.0",
+    "langchain-community>=0.0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-"
+Documentation = "https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/blob/main/README.md"
+Repository = "https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-"
+Issues = "https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/issues"
+Changelog = "https://github.com/kentstone84/PyTorch-2.10.0a0-for-Linux-/releases"
+
+[project.scripts]
+stone-verify = "stone_linux.cli:verify_installation"
+stone-install = "stone_linux.cli:install_pytorch"
+
+[tool.setuptools]
+packages = ["stone_linux", "stone_linux.examples"]
+
+[tool.setuptools.package-data]
+stone_linux = ["py.typed"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = ["E", "F", "I", "W"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false

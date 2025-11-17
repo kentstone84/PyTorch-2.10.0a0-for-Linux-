@@ -36,3 +36,25 @@ pytorch-env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Wheels and models
+*.whl
+*.pt
+*.pth
+*.onnx
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Benchmark results
+benchmark-results.json
+benchmark_results.json
+
+# Logs
+*.log
